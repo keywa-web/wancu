@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proxy Checker (Netlify API)</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 5px;
+    }
+    .box {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      max-width: 600px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 18px;
+      font-size: 16px;
+      background: #0077ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005ed6;
+    }
+    pre {
+      background: #1b1b1b;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Proxy Checker (Netlify)</h2>
+  <p>Masukkan proxy dengan format bebas: baris, koma, spasi.</p>
+
+  <div class="box">
+    <textarea id="proxyInput" placeholder="31.24.253.246:2053&#10;8.8.8.8:443, 1.1.1.1:443"></textarea>
+    <button onclick="runCheck()">Check Proxy</button>
+
+    <pre id="result">Hasil akan tampil di sini...</pre>
+  </div>
+
+  <script>
+    function autoFormat(raw) {
+      return Array.from(
+        new Set(
+          raw
+            .split(/[\n, ]+/)
+            .map(v => v.trim())
+            .filter(v => v.length > 0)
+        )
+      );
+    }
+
+    async function runCheck() {
+      const raw = document.getElementById("proxyInput").value;
+      const resultBox = document.getElementById("result");
+
+      const proxies = autoFormat(raw);
+      if (proxies.length === 0) {
+        resultBox.textContent = "Masukkan IP:PORT dulu.";
+        return;
+      }
+
+      if (proxies.length > 1) {
+        resultBox.textContent = "Untuk sekarang hanya 1 proxy per test (gunakan format ip:port tunggal).";
+        return;
+      }
+
+      const [proxy] = proxies;
+      const [ip, port] = proxy.split(":");
+
+      if (!ip || !port) {
+        resultBox.textContent = "Format salah — harus ip:port";
+        return;
+      }
+
+      resultBox.textContent = "Checking...";
+
+      try {
+        const url = `/api/v1?ip=${encodeURIComponent(ip)}&port=${encodeURIComponent(port)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        resultBox.textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        resultBox.textContent = "Error: " + err;
+      }
+    }
+  </script>
+
+</body>
+</html>

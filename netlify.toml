@@ -1,0 +1,9 @@
+[functions]
+  directory = "netlify/functions"
+
+# Redirect API ke Serverless Function
+[[redirects]]
+  from = "/api/v1"
+  to = "/.netlify/functions/proxy-checker"
+  status = 200
+  force = true
